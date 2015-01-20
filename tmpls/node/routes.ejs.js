@@ -1,5 +1,5 @@
-<% if (header) { -%>
-<%- include(header) %>
+<% if (setupFile) { -%>
+<%- include(setupFile, answers) %>
 <% }             -%>
 
 exports.setRoutes = function(App) {

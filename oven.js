@@ -24,7 +24,7 @@ exports.bake = function(options, done) {
         return fillQuestions(Cookbook.recipes[question.include].questions, question.include, fillNextQuestion);
       }
       RL.question(question.question + '\n', function(answer) {
-        answers[recName][question.name] = answer ? JSON.stringify(answer) : 'req.body.' + recipeName + '.' + question.name;
+        answers[recName][question.name] = answer;
         if (question.conditionals && question.conditionals[answer]) {
           return fillQuestions(question.conditionals[answer], recName, fillNextQuestion);
         }
@@ -37,7 +37,7 @@ exports.bake = function(options, done) {
   if (typeof recipe.templates.server === 'string') recipe.templates.server = [recipe.templates.server];
 
   function sendOutput(done) {
-    var serverRoutes = [].concat.apply([], Object.keys(answers).map(function(key) {
+    var serverRoutes = [].concat.apply([], Object.keys(answers).filter(function(key) {return key !== 'setup'}).map(function(key) {
       var tmpls = Cookbook.recipes[key].templates;
       if (typeof tmpls.server === 'string') tmpls.server = [tmpls.server];
       return tmpls.server.map(function(tmpl) {
@@ -52,8 +52,12 @@ exports.bake = function(options, done) {
         html: {
           files: [{
             from: __dirname + '/tmpls/html/page.ejs.html',
-            to:  Cookbook.name + '/' + recipeName + '.html',
-            inputs: {answers: answers, clientFile: process.cwd() + '/recipes/client/html/' + recipe.templates.client + '.ejs.html'}
+            to: 'static/' + recipeName + '.html',
+            inputs: {
+              answers: answers,
+              clientFile: process.cwd() + '/recipes/client/html/' + recipe.templates.client + '.ejs.html',
+              dataPath: recipe.templates.server[0],
+            }
           }]
         }
       },
@@ -62,7 +66,7 @@ exports.bake = function(options, done) {
           files: [{
             from: __dirname + '/tmpls/node/routes.ejs.js',
             to: Cookbook.name + '-routes.js',
-            inputs: {routes: serverRoutes, answers: answers, header: process.cwd() + '/recipes/server/node/setup.ejs.js'},
+            inputs: {routes: serverRoutes, answers: answers, setupFile: process.cwd() + '/recipes/server/node/setup.ejs.js'},
           },{
             from: __dirname + '/tmpls/node/server.ejs.js',
             to: 'server.js',
@@ -86,7 +90,7 @@ exports.bake = function(options, done) {
     var filesToRender = clientTmpl.files.concat(serverTmpl.files);
     if (filesToRender.length === 0) return done();
 
-    Mkdirp(dest + '/' + Cookbook.name);
+    Mkdirp(dest + '/static');
 
     function copyFiles(done) {
       var filesCopied = 0;

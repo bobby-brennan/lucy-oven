@@ -2,9 +2,27 @@
 <head>
 <title>
 </title>
-<body>
-
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap-theme.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.2.0/angular.min.js"></script>
+  <script>
+    var App = angular.module('App', []);
+    App.controller("LucyController", function($scope) {
+      $scope.form = {};
+      $scope.loadData = function() {
+        $.post('<%- dataPath %>', JSON.stringify($scope.form), function(response) {
+          console.log('resp:' + JSON.stringify(response));
+          $scope.result = response;
+          $scope.$apply();
+        }, 'json');
+      }
+    })
+  </script>
+<body ng-app="App">
+  <div ng-controller="LucyController" ng-init="loadData()">
 <%- include(clientFile, answers) %>
-
+  </div>
 </body>
 </html>
